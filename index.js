@@ -2,6 +2,23 @@ import express from "express";
 import bodyParser from "body-parser";
 import axios from "axios";
 
+let cache = {
+  random: null,
+  filter: {}
+};
+
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const fallbackActivities = [
+  { activity: "Go for a short walk", type: "relaxation", participants: 1 },
+  { activity: "Read 10 pages of a book", type: "education", participants: 1 },
+  { activity: "Clean your workspace", type: "busywork", participants: 1 },
+  { activity: "Listen to a podcast", type: "relaxation", participants: 1 },
+  { activity: "Call a friend", type: "social", participants: 2 },
+  { activity: "Learn a new keyboard shortcut", type: "education", participants: 1 },
+  { activity: "Stretch for 5 minutes", type: "relaxation", participants: 1 }
+];
+
+
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -10,22 +27,37 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get("/", async (req, res) => {
   try {
-    const response = await axios.get("https://bored-api.appbrewery.com/random");
-    const result = response.data;
-    console.log(result);
-    res.render("index.ejs", { data: result });
+    if (cache.random && Date.now() - cache.random.time < CACHE_TTL) {
+      return res.render("index.ejs", { data: cache.random.data });
+    }
 
-  } catch (error) {
-    console.error("Failed to make request:", error.message);
+    const response = await axios.get("https://bored-api.appbrewery.com/random");
+    cache.random = {
+      data: response.data,
+      time: Date.now()
+    };
+
+    res.render("index.ejs", { data: response.data });
+
+  } catch {
     res.render("index.ejs", {
-      error: error.message,
+      error: "Service is busy. Please try again in a moment."
     });
   }
 });
 
+
 app.post("/", async (req, res) => {
   try {
     const { type, participants } = req.body;
+    const key = `${type}-${participants}`;
+
+    if (
+      cache.filter[key] &&
+      Date.now() - cache.filter[key].time < CACHE_TTL
+    ) {
+      return res.render("index.ejs", { data: cache.filter[key].data });
+    }
 
     let url = "https://bored-api.appbrewery.com/filter?";
     if (type) url += `type=${type}&`;
@@ -36,20 +68,35 @@ app.post("/", async (req, res) => {
 
     if (!result.length) {
       return res.render("index.ejs", {
-        error: "No activities found. Try different filters.",
+        error: "No activities found. Try different filters."
       });
     }
 
     const randomValue = Math.floor(Math.random() * result.length);
-    res.render("index.ejs", { data: result[randomValue] });
+    const activity = result[randomValue];
 
-  } catch (error) {
-    console.error(error.message);
+    cache.filter[key] = {
+      data: activity,
+      time: Date.now()
+    };
+
+    res.render("index.ejs", { data: activity });
+
+  } catch {
+    console.error("API failed, using fallback");
+
+    const random =
+    fallbackActivities[
+      Math.floor(Math.random() * fallbackActivities.length)
+    ];
+
     res.render("index.ejs", {
-      error: "API limit reached. Try again later.",
+    data: random,
+    error: "Using offline suggestions due to high traffic."
     });
   }
 });
+
 
 
 app.listen(port, () => {
