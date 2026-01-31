@@ -3,10 +3,14 @@
   "version": "1.0.0",
   "main": "index.js",
   "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
   "engines": {
     "node": ">= 14.0.0",
     "npm": ">= 6.0.0"
-  },
+  }
+  ,
   "homepage": "",
   "repository": {
     "type": "git",
@@ -16,10 +20,6 @@
   "keywords": [],
   "author": "",
   "contributors": [],
-  "scripts": {
-    "dev": "",
-    "test": ""
-  },
   "description": "",
   "dependencies": {
     "axios": "^1.4.0",
