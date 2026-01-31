@@ -4,15 +4,20 @@ A simple web application that suggests activities based on:
 - Type (education, charity, relaxation, etc.)
 - Number of participants
 
+## 🚀 Live Demo
+https://bored.aragulkumar.com
+
+## 📸 Preview
+<p align="center">
+  <img src="assets/demo.png" alt="Live Demo Screenshot" width="800">
+</p>
+
 ## 🛠 Tech Stack
 - Node.js
 - Express.js
 - EJS
 - Axios
 - Bored API
-
-## 🚀 Live Demo
-https://bored.aragulkumar.com
 
 ## 📌 Features
 - Random activity suggestions
